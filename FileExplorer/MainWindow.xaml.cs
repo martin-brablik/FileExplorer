@@ -21,7 +21,7 @@ namespace FileExplorer
 
         private readonly ListBox[] _listBoxes;
         private readonly TextBox[] _paths;
-        private readonly Button[] _goBtns, CutBtns, CopyBtns, PasteBtns, RenameBtns, DelBtns;
+        private readonly Button[] _goBtns, _cutBtns, _copyBtns, _pasteBtns, _renameBtns, _delBtns;
 
         private readonly string[] _currentLocations;
 
@@ -41,19 +41,19 @@ namespace FileExplorer
             _listBoxes = new ListBox[] { List1, List2 };
             _paths = new TextBox[] { Path1, Path2 };
             _goBtns = new Button[] { Go1, Go2 };
-            CutBtns = new Button[] { Cut1, Cut2 };
-            CopyBtns = new Button[] { Copy1, Copy2 };
-            PasteBtns = new Button[] { Paste1, Paste2 };
-            RenameBtns = new Button[] { Rename1, Rename2 };
-            DelBtns = new Button[] { Delete1, Delete2 };
+            _cutBtns = new Button[] { Cut1, Cut2 };
+            _copyBtns = new Button[] { Copy1, Copy2 };
+            _pasteBtns = new Button[] { Paste1, Paste2 };
+            _renameBtns = new Button[] { Rename1, Rename2 };
+            _delBtns = new Button[] { Delete1, Delete2 };
 
             _currentLocations = Enumerable.Repeat<string>(Path.GetFullPath(Environment.GetEnvironmentVariable("userprofile")), 2).ToArray<string>();
 
             _paths[0].Text = _currentLocations[0];
             _paths[1].Text = _currentLocations[1];
 
-            UpdateListBox(List1, _currentLocations[0]);
-            UpdateListBox(List2, _currentLocations[1]);
+            UpdateListBox(_listBoxes[0], _currentLocations[0]);
+            UpdateListBox(_listBoxes[1], _currentLocations[1]);
         }
 
         private void ChangePasteButtons(bool enable)
@@ -76,41 +76,52 @@ namespace FileExplorer
                 _paths[index].Text = "";
                 return;
             }
-            if (Directory.Exists(Path.GetFullPath(path)))
+            if (!path.EndsWith("\\"))
+                path += Path.DirectorySeparatorChar;
+            try
             {
-                _currentLocations[index] = Path.GetFullPath(path);
-                UpdateListBox(_listBoxes[index], Path.GetFullPath(path));
-                _paths[index].Text = Path.GetFullPath(path);
+                if (Directory.Exists(Path.GetFullPath(path))) 
+                    UpdateListBox(_listBoxes[index], Path.GetFullPath(path));
             }
+            catch(Exception ex)
+            {
+                MessageBox.Show(ex.Message, "File Explorer", MessageBoxButton.OK, MessageBoxImage.Warning);
+                _paths[index].Text = _currentLocations[index];
+                return;
+            }
+            _currentLocations[index] = Path.GetFullPath(path);
+            _paths[index].Text = Path.GetFullPath(path);
         }
 
         private void UpdateListBox(ListBox lb, string path)
         {
+            string[] directories = Array.Empty<string>();
+            string[] files = Array.Empty<string>();
             try
             {
-                lb.Items.Clear();
-                string[] directories = Directory.GetDirectories(path);
-                string[] files = Directory.GetFiles(path);
-                for (int i = 0; i <= directories.Length; i++)
-                {
-                    ListBoxItem lbItem;
-                    lbItem = i == 0 ? new ListBoxItem { Content = "..", Foreground = Brushes.Blue } :
-                        new ListBoxItem { Content = Path.GetFileName(directories[i - 1]), Foreground = Brushes.Blue };
-                    lbItem.PreviewMouseDoubleClick += LbItem_DoubleClick;
-                    lbItem.PreviewKeyDown += LbItem_KeyboardShortcut;
-                    lb.Items.Add(lbItem);
-                }
-                for (int i = 0; i < files.Length; i++)
-                {
-                    var lbItem = new ListBoxItem { Content = Path.GetFileName(files[i]), Foreground = Brushes.Black };
-                    lbItem.PreviewMouseDoubleClick += LbItem_DoubleClick;
-                    lbItem.PreviewKeyDown += LbItem_KeyboardShortcut;
-                    lb.Items.Add(lbItem);
-                }
+                directories = Directory.GetDirectories(path);
+                files = Directory.GetFiles(path);
             }
             catch(Exception ex)
             {
-                MessageBox.Show(ex.Message,"File Explorer", MessageBoxButton.OK, MessageBoxImage.Warning);
+                throw ex;
+            }
+            lb.Items.Clear();
+            for (int i = 0; i <= directories.Length; i++)
+            {
+                ListBoxItem lbItem;
+                lbItem = i == 0 ? new ListBoxItem { Content = "..", Foreground = Brushes.Blue } :
+                    new ListBoxItem { Content = Path.GetFileName(directories[i - 1]), Foreground = Brushes.Blue };
+                lbItem.PreviewMouseDoubleClick += LbItem_DoubleClick;
+                lbItem.PreviewKeyDown += LbItem_KeyboardShortcut;
+                lb.Items.Add(lbItem);
+            }
+            for (int i = 0; i < files.Length; i++)
+            {
+                var lbItem = new ListBoxItem { Content = Path.GetFileName(files[i]), Foreground = Brushes.Black };
+                lbItem.PreviewMouseDoubleClick += LbItem_DoubleClick;
+                lbItem.PreviewKeyDown += LbItem_KeyboardShortcut;
+                lb.Items.Add(lbItem);
             }
         }
 
@@ -185,7 +196,8 @@ namespace FileExplorer
 
         private void Path_TextChanged(object sender, KeyEventArgs e)
         {
-            Go_Click(_goBtns[Array.IndexOf<TextBox>(_paths, (TextBox)sender)], e);
+            if(e.Key == Key.Return)
+                Go_Click(_goBtns[Array.IndexOf<TextBox>(_paths, (TextBox)sender)], e);
         }
 
         private void LbItem_DoubleClick(object sender, MouseEventArgs e)
@@ -204,13 +216,14 @@ namespace FileExplorer
             var sideIndex = GetSideIndex<Button>((Button)sender, _goBtns);
             if (FileOperations.IsAbsolutePath(_paths[sideIndex].Text))
                 ChangeDirectory(_paths[sideIndex].Text, sideIndex);
+                
             else
                 ChangeDirectory(Path.Combine(_currentLocations[sideIndex], _paths[sideIndex].Text), sideIndex);
         }
 
         private void Cut_Click(object sender, RoutedEventArgs e)
         {
-            var sideIndex = GetSideIndex<Button>((Button)sender, CutBtns);
+            var sideIndex = GetSideIndex<Button>((Button)sender, _cutBtns);
             var selectedItem = _listBoxes[sideIndex].SelectedItem as ListBoxItem;
             if (selectedItem != null)
                 FileOperations.MoveFiles(new string[] { Path.Combine(_currentLocations[sideIndex], selectedItem.Content.ToString()) });
@@ -220,17 +233,18 @@ namespace FileExplorer
 
         private void Copy_Click(object sender, RoutedEventArgs e)
         {
-            var sideIndex = GetSideIndex<Button>((Button)sender, CopyBtns);
+            var sideIndex = GetSideIndex<Button>((Button)sender, _copyBtns);
             var selectedItem = _listBoxes[sideIndex].SelectedItem as ListBoxItem;
             if (selectedItem != null)
-                FileOperations.CopyFiles(new string[] { Path.Combine(_currentLocations[sideIndex], selectedItem.Content.ToString()) });
+                FileOperations.CopyFiles(new string[]
+                { Path.Combine(_currentLocations[sideIndex], selectedItem.Content.ToString()) });
             ChangePasteButtons(true);
             CurrentPasteMode = FileOperations.PasteMode.COPY;
         }
 
         private void Rename_Click(object sender, RoutedEventArgs e)
         {
-            var sideIndex = GetSideIndex<Button>((Button)sender, RenameBtns);
+            var sideIndex = GetSideIndex<Button>((Button)sender, _renameBtns);
             var selectedItem = _listBoxes[sideIndex].SelectedItem as ListBoxItem;
             RenameBox.IsEnabled = true;
             RenameBox.Focus();
@@ -261,7 +275,7 @@ namespace FileExplorer
 
         private void Delete_Click(object sender, RoutedEventArgs e)
         {
-            var sideIndex = GetSideIndex<Button>((Button)sender, DelBtns);
+            var sideIndex = GetSideIndex<Button>((Button)sender, _delBtns);
             var selectedItem = _listBoxes[sideIndex].SelectedItem as ListBoxItem;
             if (selectedItem != null)
                 FileOperations.DeleteFile(Path.Combine(_currentLocations[sideIndex], selectedItem.Content.ToString()));
@@ -270,10 +284,13 @@ namespace FileExplorer
 
         private void Paste_Click(object sender, RoutedEventArgs e)
         {
-            var sideIndex = GetSideIndex<Button>((Button)sender, PasteBtns);
+            var sideIndex = GetSideIndex<Button>((Button)sender, _pasteBtns);
             FileOperations.PasteFile(CurrentPasteMode, _currentLocations[sideIndex]);
             if (!Clipboard.ContainsFileDropList() || CurrentPasteMode == FileOperations.PasteMode.CUT)
+            {
                 ChangePasteButtons(false);
+                Clipboard.Clear();
+            }  
             UpdateListBox(_listBoxes[0], _currentLocations[0]);
             UpdateListBox(_listBoxes[1], _currentLocations[1]);
         }
@@ -298,6 +315,7 @@ namespace FileExplorer
             ListBoxItem item = e.Data.GetData(DataFormats.FileDrop) as ListBoxItem;
             string srcPath = Path.Combine(_currentLocations[srcIndex], item.Content.ToString());
             string dstPath = Path.Combine(_currentLocations[dstIndex], item.Content.ToString());
+            if (srcPath.Equals(dstPath)) return;
             if (item != null)
             {
                 try
@@ -329,7 +347,7 @@ namespace FileExplorer
                 {
                     ListBoxItem selectedItem = _listBoxes[srcListIndex].SelectedItem as ListBoxItem;
                     if(selectedItem != null)
-                        DragDrop.DoDragDrop(this, new DataObject(DataFormats.FileDrop, selectedItem), DragDropEffects.Copy);
+                        DragDrop.DoDragDrop((ListBox)sender, new DataObject(DataFormats.FileDrop, selectedItem), DragDropEffects.Copy);
                 }
                 catch(Exception ex)
                 {

@@ -14,12 +14,6 @@ namespace FileExplorer
             CUT
         }
 
-        public delegate void Cut(string[] filePaths);
-        public delegate void Copy(string[] filePaths);
-        public delegate void Paste(PasteMode pasteMode, string destinationPath);
-        public delegate void Rename(string filePath, string newName);
-        public delegate void Delete(string filePath);
-
         public static bool IsValidPath(string path)
         {
             string[] subdirectories = path.Split('\\');

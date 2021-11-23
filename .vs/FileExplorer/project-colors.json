@@ -5,6 +5,11 @@
       "ProjectGuid": "92583285-e460-4385-b78d-03666fae9b87",
       "DisplayName": "FileExplorer",
       "ColorIndex": 0
+    },
+    "a2fe74e1-b743-11d0-ae1a-00a0c90fffc3": {
+      "ProjectGuid": "a2fe74e1-b743-11d0-ae1a-00a0c90fffc3",
+      "DisplayName": "Ostatní soubory",
+      "ColorIndex": -1
     }
   },
   "NextColorIndex": 1
