@@ -1,0 +1,17 @@
+C:\Users\brmar\source\repos\FileExplorer\FileExplorer\bin\Release\FileExplorer.exe.config
+C:\Users\brmar\source\repos\FileExplorer\FileExplorer\bin\Release\FileExplorer.exe
+C:\Users\brmar\source\repos\FileExplorer\FileExplorer\bin\Release\FileExplorer.pdb
+C:\Users\brmar\source\repos\FileExplorer\FileExplorer\obj\Release\FileExplorer.csproj.AssemblyReference.cache
+C:\Users\brmar\source\repos\FileExplorer\FileExplorer\obj\Release\FileExplorer.csproj.SuggestedBindingRedirects.cache
+C:\Users\brmar\source\repos\FileExplorer\FileExplorer\obj\Release\MainWindow.g.cs
+C:\Users\brmar\source\repos\FileExplorer\FileExplorer\obj\Release\App.g.cs
+C:\Users\brmar\source\repos\FileExplorer\FileExplorer\obj\Release\FileExplorer_MarkupCompile.cache
+C:\Users\brmar\source\repos\FileExplorer\FileExplorer\obj\Release\FileExplorer_MarkupCompile.lref
+C:\Users\brmar\source\repos\FileExplorer\FileExplorer\obj\Release\App.baml
+C:\Users\brmar\source\repos\FileExplorer\FileExplorer\obj\Release\MainWindow.baml
+C:\Users\brmar\source\repos\FileExplorer\FileExplorer\obj\Release\FileExplorer.g.resources
+C:\Users\brmar\source\repos\FileExplorer\FileExplorer\obj\Release\FileExplorer.Properties.Resources.resources
+C:\Users\brmar\source\repos\FileExplorer\FileExplorer\obj\Release\FileExplorer.csproj.GenerateResource.cache
+C:\Users\brmar\source\repos\FileExplorer\FileExplorer\obj\Release\FileExplorer.csproj.CoreCompileInputs.cache
+C:\Users\brmar\source\repos\FileExplorer\FileExplorer\obj\Release\FileExplorer.exe
+C:\Users\brmar\source\repos\FileExplorer\FileExplorer\obj\Release\FileExplorer.pdb
