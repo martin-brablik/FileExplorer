@@ -89,7 +89,7 @@ namespace FileExplorer
             {
                 if (dataObject.GetDataPresent(DataFormats.FileDrop))
                 {
-                    var files = (string[])dataObject.GetData(DataFormats.FileDrop);
+                    string[] files = (string[])dataObject.GetData(DataFormats.FileDrop);
                     foreach (string fileName in files)
                     {
                         if (File.Exists(fileName))
@@ -135,18 +135,25 @@ namespace FileExplorer
         {
             DirectoryInfo dir = new DirectoryInfo(directoryName);
             DirectoryInfo[] dirs = dir.GetDirectories();
-            Directory.CreateDirectory(Path.Combine(destinationPath, Path.GetFileName(directoryName)));
-            FileInfo[] dirFiles = dir.GetFiles();
-            foreach (FileInfo file in dirFiles)
+            try
             {
-                string tempPath = Path.Combine(destinationPath, Path.GetFileName(directoryName), file.Name);
-                file.CopyTo(tempPath, false);
+                Directory.CreateDirectory(Path.Combine(destinationPath, Path.GetFileName(directoryName)));
+                FileInfo[] dirFiles = dir.GetFiles();
+                foreach (FileInfo file in dirFiles)
+                {
+                    string tempPath = Path.Combine(destinationPath, Path.GetFileName(directoryName), file.Name);
+                    file.CopyTo(tempPath, false);
+                }
+                foreach (DirectoryInfo subdir in dirs)
+                {
+                    string tempPath = Path.Combine(destinationPath, Path.GetFileName(directoryName), subdir.Name);
+                    CopyDirectory(subdir.FullName, tempPath);
+                }
             }
-            foreach (DirectoryInfo subdir in dirs)
+            catch(Exception ex)
             {
-                string tempPath = Path.Combine(destinationPath, Path.GetFileName(directoryName), subdir.Name);
-                CopyDirectory(subdir.FullName, tempPath);
-            }                
+                MessageBox.Show(ex.Message, "File Explorer", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
         }
     }
 }

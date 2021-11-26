@@ -58,8 +58,8 @@ namespace FileExplorer
 
         private void ChangePasteButtons(bool enable)
         {
-            Paste1.IsEnabled = enable;
-            Paste2.IsEnabled = enable;
+            _pasteBtns[0].IsEnabled = enable;
+            _pasteBtns[1].IsEnabled = enable;
             BitmapImage source = enable ? _enabledPasteImage : _disabledPasteImage;
             Paste1_Icon.Source = source;
             Paste2_Icon.Source = source;
@@ -76,7 +76,7 @@ namespace FileExplorer
                 _paths[index].Text = "";
                 return;
             }
-            if (!path.EndsWith("\\"))
+            if (!path.EndsWith(Path.DirectorySeparatorChar.ToString()))
                 path += Path.DirectorySeparatorChar;
             try
             {
@@ -118,7 +118,7 @@ namespace FileExplorer
             }
             for (int i = 0; i < files.Length; i++)
             {
-                var lbItem = new ListBoxItem { Content = Path.GetFileName(files[i]), Foreground = Brushes.Black };
+                ListBoxItem lbItem = new ListBoxItem { Content = Path.GetFileName(files[i]), Foreground = Brushes.Black };
                 lbItem.PreviewMouseDoubleClick += LbItem_DoubleClick;
                 lbItem.PreviewKeyDown += LbItem_KeyboardShortcut;
                 lb.Items.Add(lbItem);
@@ -160,13 +160,13 @@ namespace FileExplorer
             ButtonCallback shortcutFunction;
             var lbItem = sender as ListBoxItem;
             var listbox = GetParentOfType<ListBox>(lbItem);
-            object operationButton = GetButtonFromKey(e.Key, listbox, out shortcutFunction);
+            Button operationButton = GetButtonFromKey(e.Key, listbox, out shortcutFunction);
 
             if (shortcutFunction != null && (_isControlPressed || e.Key == Key.Delete))
                 shortcutFunction(operationButton, e);
         }
 
-        private object GetButtonFromKey(Key key, ListBox side, out ButtonCallback callback)
+        private Button GetButtonFromKey(Key key, ListBox side, out ButtonCallback callback)
         {
             var sideIndex = GetSideIndex<ListBox>(side, _listBoxes);
             if (sideIndex == -1)
@@ -178,19 +178,19 @@ namespace FileExplorer
             {
                 case Key.C:
                     callback = Copy_Click;
-                    return sideIndex == 0 ? Copy1 : Copy2;
+                    return sideIndex == 0 ? _copyBtns[0] : _copyBtns[1];
                 case Key.X:
                     callback = Cut_Click;
-                    return sideIndex == 0 ? Cut1 : Cut2;
+                    return sideIndex == 0 ? _cutBtns[0] : _cutBtns[1];
                 case Key.V:
                     callback = Paste_Click;
-                    return sideIndex == 0 ? Paste2 : Paste1;
+                    return sideIndex == 0 ? _pasteBtns[1] : _pasteBtns[0];
                 case Key.Delete:
                     callback = Delete_Click;
-                    return sideIndex == 0 ? Delete1 : Delete2;
+                    return sideIndex == 0 ? _delBtns[0] : _delBtns[1];
                 default:
                     callback = null;
-                    return callback;
+                    return null;
             }    
         }
 
@@ -236,8 +236,7 @@ namespace FileExplorer
             var sideIndex = GetSideIndex<Button>((Button)sender, _copyBtns);
             var selectedItem = _listBoxes[sideIndex].SelectedItem as ListBoxItem;
             if (selectedItem != null)
-                FileOperations.CopyFiles(new string[]
-                { Path.Combine(_currentLocations[sideIndex], selectedItem.Content.ToString()) });
+                FileOperations.CopyFiles(new string[]  { Path.Combine(_currentLocations[sideIndex], selectedItem.Content.ToString()) });
             ChangePasteButtons(true);
             CurrentPasteMode = FileOperations.PasteMode.COPY;
         }
@@ -312,28 +311,26 @@ namespace FileExplorer
         {
             var srcIndex = sender == List1 ? 1 : 0;
             var dstIndex = sender == List1 ? 0 : 1;
-            ListBoxItem item = e.Data.GetData(DataFormats.FileDrop) as ListBoxItem;
-            string srcPath = Path.Combine(_currentLocations[srcIndex], item.Content.ToString());
-            string dstPath = Path.Combine(_currentLocations[dstIndex], item.Content.ToString());
+            var lbItem = e.Data.GetData(DataFormats.FileDrop) as ListBoxItem;
+            if(lbItem == null) return;
+            string srcPath = Path.Combine(_currentLocations[srcIndex], lbItem.Content.ToString());
+            string dstPath = Path.Combine(_currentLocations[dstIndex], lbItem.Content.ToString());
             if (srcPath.Equals(dstPath)) return;
-            if (item != null)
+            try
             {
-                try
+                if (File.Exists(srcPath))
+                    File.Move(srcPath, dstPath);
+                else if (Directory.Exists(srcPath))
                 {
-                    if (File.Exists(srcPath))
-                        File.Move(srcPath, dstPath);
-                    else if (Directory.Exists(srcPath))
-                    {
-                        FileOperations.CopyDirectory(srcPath, Path.GetDirectoryName(dstPath));
-                        Directory.Delete(srcPath, true);
-                    }
-                    UpdateListBox(List1, _currentLocations[0]);
-                    UpdateListBox(List2, _currentLocations[1]);
+                    FileOperations.CopyDirectory(srcPath, Path.GetDirectoryName(dstPath));
+                    Directory.Delete(srcPath, true);
                 }
-                catch(Exception ex)
-                {
-                    MessageBox.Show(ex.Message, "File Explorer", MessageBoxButton.OK, MessageBoxImage.Warning);
-                }
+                UpdateListBox(List1, _currentLocations[0]);
+                UpdateListBox(List2, _currentLocations[1]);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "File Explorer", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 
